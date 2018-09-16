@@ -1,0 +1,8 @@
+apiVersion: "otomato.link/v1alpha1"
+kind: BirdWatch
+metadata:
+  name: aleph
+spec:
+  service: aleph
+  metric: total_exceptions
+  canary: v03

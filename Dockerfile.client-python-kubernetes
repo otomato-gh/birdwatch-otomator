@@ -1,0 +1,4 @@
+FROM python:3-slim
+LABEL "MAINTAINER"="Otomato Software Ltd. <contact@otomato.link>"
+
+RUN pip install kubernetes

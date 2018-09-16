@@ -1,0 +1,8 @@
+apiVersion: "otomato.link/v1alpha1"
+kind: BirdWatch
+metadata:
+  name: beth
+spec:
+  service: beth
+  metric: total_exceptions
+  canary: v03
