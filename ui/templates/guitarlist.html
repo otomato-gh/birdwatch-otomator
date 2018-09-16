@@ -1,0 +1,23 @@
+<table id="guitars" cellspacing="0" width="100%" class="table table-striped table-bordered table-hover">
+        <thead class="thead-inverse">
+            <tr>
+                <th>Brand</th>
+                <th>Name</th>
+                <th>Review</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for guitar in guitars %}
+            {% set name = guitar.get("metadata")["name"]  %}
+            {% set brand = guitar.get("spec")["brand"]  %}
+            {% set comment = guitar.get("spec")["comment"]  %}
+		<tr>
+            <td><img src="{{ url_for('static', filename='images/'+ brand + '.png') }}" alt="{{ brand }}"/> </td>
+		<td>{{ name }}</td>
+		<td>{{ comment }}</td>
+        <td  onclick="guitardelete('{{ name }}');"><span class="glyphicon glyphicon-trash red"></span> Delete</td>
+		</tr>
+			{% endfor %}
+        </tbody>
+</table>
