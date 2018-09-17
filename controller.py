@@ -1,12 +1,14 @@
 import json
 import yaml
 from kubernetes import client, config, watch
-import os
+import os, time
+import monkeypatches.monkeypatch
 
 DOMAIN = "otomato.link"
 
 def check_canary_health():
     print("Checking canary health ")
+    time.sleep(5)
     return True
 
 def update_virtualservice(crds, obj):
@@ -23,6 +25,7 @@ def update_virtualservice(crds, obj):
     prodWeight = 99
     canaryWeight = 1
     while canary_healthy and canaryWeight <=100:
+        print("canary %s prod %s " %(canaryWeight, prodWeight))
         document = """
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
