@@ -4,5 +4,5 @@ metadata:
   name: aleph
 spec:
   service: aleph
-  metric: total_exceptions
-  canary: v03
+  metric: 'flask_request_count{endpoint="/version",http_status="500",instance="aleph.games.svc.cluster.local:8000",job="aleph",method="GET"}[60m]'
+  canary_version: v04
