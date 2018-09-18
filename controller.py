@@ -176,6 +176,8 @@ if __name__ == "__main__":
         for event in stream:
             obj = event["object"]
             operation = event['type']
+            if operation == "DELETED":
+                continue
             spec = obj.get("spec")
             if not spec:
                 continue
