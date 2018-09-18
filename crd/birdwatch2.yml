@@ -4,5 +4,7 @@ metadata:
   name: aleph
 spec:
   service: aleph
-  metric: 'flask_request_count{endpoint="/version",http_status="500",instance="aleph.games.svc.cluster.local:8000",job="aleph",method="GET"}[60m]'
+  metric: 'sum_over_time(flask_request_count{endpoint="/version",http_status="500",job="aleph"}[5m])'
+  deviation: 100
   canary_version: v04
+  if_unhealthy: rollback
