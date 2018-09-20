@@ -45,10 +45,14 @@ def update_destination_rule(crds, namespace, service):
     return destination_rule
          
 def cleanup_k8s_object(obj):
-    obj["metadata"].pop("annotations")
-    obj["metadata"].pop("resourceVersion")    
-    obj["metadata"].pop("uid")   
-    obj["metadata"].pop("selfLink")
+    if 'annotations' in obj["metadata"]:
+        obj["metadata"].pop("annotations")
+    if 'resourceVersion' in obj["metadata"]:
+        obj["metadata"].pop("resourceVersion")    
+    if 'uid' in obj["metadata"]:
+        obj["metadata"].pop("uid")
+    if 'selfLink' in obj["metadata"]:    
+        obj["metadata"].pop("selfLink")
     return obj
 
 def update_virtualservice(crds, obj):
