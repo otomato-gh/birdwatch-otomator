@@ -4,12 +4,13 @@ from kubernetes import client, config, watch
 import os, time, datetime
 import requests
 import monkeypatches.monkeypatch
-import notifications.slack as slack
 
 DOMAIN = "otomato.link"
 PROM_URL = os.getenv("PROMETHEUS_URL", "http://prometheus.159.8.233.5.nip.io")  # http://prometheus.default.svc.cluster.local"
 
 if os.getenv('SLACK_API_TOKEN'):
+    import notifications.slack as slack
+    print ("Slack bot activated")
     chat_notify = slack.notify
 else:
     def chat_notify(message):

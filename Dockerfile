@@ -1,6 +1,7 @@
-FROM otomato/python-k8s-client
+FROM python:3-slim
 LABEL "MAINTAINER"="Otomato Software Ltd. <contact@otomato.link>"
-ADD controller.py /birdwatch
-ADD guitar.yml /birdwatch
+ADD . /birdwatch/
+WORKDIR /birdwatch
+RUN pip3 install -r requirements.txt
 
-ENTRYPOINT  ["python", "-u", "/birdwatch/controller.py"]
+ENTRYPOINT  ["python", "-u", "controller.py"]
