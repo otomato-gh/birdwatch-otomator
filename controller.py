@@ -1,31 +1,47 @@
 import json
 import yaml
 from kubernetes import client, config, watch
-import os, time
+import os, time, datetime
 import requests
 import monkeypatches.monkeypatch
+import notifications.slack as slack
 
 DOMAIN = "otomato.link"
 PROM_URL = os.getenv("PROMETHEUS_URL", "http://prometheus.159.8.233.5.nip.io")  # http://prometheus.default.svc.cluster.local"
 
+if os.getenv('SLACK_API_TOKEN'):
+    chat_notify = slack.notify
+else:
+    def chat_notify(message):
+        return True
+
+def log(message, chat=False):
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(timestamp+" - "+message)
+    if chat:
+        chat_notify(timestamp+" - "+message)
+
 def check_canary_health(metric, healthy, deviation):
-    print("Checking canary health ")
-    current = retrieve_metric(metric)
-    if int(current) - int(healthy) > deviation:
+    log("Checking canary health ")
+    current = retrieve_metric(metric["query"])
+    if 'previous' not in metric:
+        metric["previous"] = int(current)
+    if int(current) - int(healthy) > deviation or int(current) - metric["previous"] > deviation:
         return False
     time.sleep(1)
+    metric["previous"] = int(current)
     return True
 
 def retrieve_metric(query):
     response = requests.get(PROM_URL+"/api/v1/query?query="+query).content
     metric = json.loads(response)
     if metric["data"]["result"]:
-        print(metric["data"]["result"][0]["value"][1])
+        log("Current metric is {}".format(metric["data"]["result"][0]["value"][1]))
         return metric["data"]["result"][0]["value"][1]
-    print(metric)
     return 0
 
 def update_destination_rule(crds, namespace, service):
+    log ("Get destinationrule {} for namespace {}".format(service, namespace ))
     destination_rule = crds.get_namespaced_custom_object("networking.istio.io", 
                                                          "v1alpha3", 
                                                          namespace,
@@ -56,15 +72,16 @@ def cleanup_k8s_object(obj):
     return obj
 
 def update_virtualservice(crds, obj):
+    metric = {}
     metadata = obj.get("metadata")
     if not metadata:
-        print("No metadata in object, skipping: %s" % json.dumps(obj, indent=1))
+        log("No metadata in object, skipping: {}".format(json.dumps(obj, indent=1)))
         return
     name = metadata.get("name")
     namespace = metadata.get("namespace")
     obj["spec"]["inprocess"] = True
     service = obj["spec"]["service"]
-    metric = obj["spec"]["metric"]
+    metric["query"] = obj["spec"]["metric"]
     
     if 'deviation' in obj["spec"]:
         deviation = int(obj["spec"]["deviation"])
@@ -81,8 +98,8 @@ def update_virtualservice(crds, obj):
     else:
         increment = 1
 
-    healthy = retrieve_metric(metric)
-    print("Updating: %s" % name)
+    healthy = retrieve_metric(metric["query"])
+    log("Updating: {}".format(name))
     canary_healthy = True
     prodWeight = 100
     canaryWeight = 0
@@ -98,25 +115,29 @@ def update_virtualservice(crds, obj):
     
     
     while canary_healthy and canaryWeight <=100:
-        print("canary %s prod %s " %(canaryWeight, prodWeight))
+        log("canary {} prod {} ".format(canaryWeight, prodWeight))
         vs["spec"]["http"][0]["route"][canary_index]["weight"] = canaryWeight
         vs["spec"]["http"][0]["route"][prod_index]["weight"] = prodWeight
         crds.patch_namespaced_custom_object("networking.istio.io", "v1alpha3", namespace, "virtualservices", name, vs)
         canary_healthy = check_canary_health(metric, healthy, deviation)
         prodWeight-=increment
         canaryWeight+=increment
-    
+        time.sleep(5)
+
     if canaryWeight >= 100:
         release_canary(destination_rule, vs, crds, obj)
     else:
+        log("Canary is sick! Performing {} on canary for {} {}.".format(if_unhealthy, name, obj["spec"]["canary_version"]), chat=True)
         exec(if_unhealthy+'(crds, vs, namespace, name)')
+        log("Performed {} on canaryfor {} {}.".format(if_unhealthy, name, obj["spec"]["canary_version"]), chat=True)
+    log("Watching the birds...")
   
 def freeze(crds, vs, namespace, name):
-    print("Freezing the canary")
+    log("Freezing the canary for {}".format(name), chat=True)
     return True
 
 def rollback(crds, virtualservice, namespace, name):
-    print("Rolling back")
+    log("Flipping producton and canary for {}".format(name))
     canary_index = next((index for (index, d) in enumerate(virtualservice["spec"]["http"][0]["route"]) 
                                                                 if d["destination"]["subset"] == "canary"), None)
     prod_index = next((index for (index, d) in enumerate(virtualservice["spec"]["http"][0]["route"]) 
@@ -134,6 +155,7 @@ def rollback(crds, virtualservice, namespace, name):
 def release_canary(destination_rule, virtualservice, crds, obj):
     #in destinationrule - make prod point at canary
     #update destination rule
+    log("Releasing the canary for {} version {}!".format(obj["metadata"]["name"], obj["spec"]["canary_version"]), chat=True)
     prod_index = next((index for (index, d) in enumerate(destination_rule["spec"]["subsets"]) 
                                                                 if d["name"] == "production"), None)
     destination_rule["spec"]["subsets"][prod_index]["labels"]["version"] = obj["spec"]["canary_version"]
@@ -172,10 +194,9 @@ if __name__ == "__main__":
         v1.create_custom_resource_definition(body)
     crds = client.CustomObjectsApi(api_client)
 
-    print("Waiting for birdwatches to come up...")
     resource_version = ''
     while True:
-        print("Waiting for more birdwatches to come up...")
+        log("Watching the birds...")
         stream = watch.Watch().stream(crds.list_cluster_custom_object, DOMAIN, "v1alpha1", "birdwatches", resource_version=resource_version)
         for event in stream:
             obj = event["object"]
@@ -188,7 +209,7 @@ if __name__ == "__main__":
             metadata = obj.get("metadata")
             resource_version = metadata['resourceVersion']
             name = metadata['name']
-            print("Handling %s on %s" % (operation, name))
+            log("New canary deployment for {}. Status: {}. Version: {}".format(name, operation, obj.get("spec")["canary_version"]), chat=True)
             done = spec.get("review", False)
             if done:
                 continue
