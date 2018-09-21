@@ -36,7 +36,7 @@ def check_canary_health(metric, healthy, deviation):
 def retrieve_metric(query):
     response = requests.get(PROM_URL+"/api/v1/query?query="+query).content
     metric = json.loads(response)
-    if metric["data"]["result"]:
+    if metric["data"]["result"] and 'value' in metric["data"]["result"][0]:
         log("Current metric is {}".format(metric["data"]["result"][0]["value"][1]))
         return metric["data"]["result"][0]["value"][1]
     return 0
