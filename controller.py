@@ -198,7 +198,11 @@ if __name__ == "__main__":
     resource_version = ''
     while True:
         log("Watching the birds...")
-        stream = watch.Watch().stream(crds.list_cluster_custom_object, DOMAIN, "v1alpha1", "birdwatches", resource_version=resource_version)
+        stream = watch.Watch().stream(crds.list_cluster_custom_object, 
+                                      DOMAIN, 
+                                      "v1alpha1", 
+                                      "birdwatches", 
+                                      resource_version=resource_version)
         for event in stream:
             obj = event["object"]
             operation = event['type']
