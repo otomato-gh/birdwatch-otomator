@@ -1,0 +1,31 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ include "birdwatch.fullname" . }}
+  labels:
+    app: {{ include "birdwatch.name" . }}
+    chart: {{ include "birdwatch.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "birdwatch.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "birdwatch.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: PROMETHEUS_URL
+            value: {{ .Values.prometheusUrl }}
+          - name: SLACK_API_TOKEN
+            value: {{ .Values.slackToken }}
+      serviceAccount: {{ .Chart.Name }}
