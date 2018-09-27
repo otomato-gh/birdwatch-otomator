@@ -34,11 +34,18 @@ def check_canary_health(metric, healthy, deviation):
     return True
 
 def retrieve_metric(query):
-    response = requests.get(PROM_URL+"/api/v1/query?query="+query).content
+    response = requests.get(PROM_URL+"/api/v1/query?query="+query, timeout=None).content
     metric = json.loads(response)
-    if metric["data"]["result"] and 'value' in metric["data"]["result"][0]:
-        log("Current metric is {}".format(metric["data"]["result"][0]["value"][1]))
-        return metric["data"]["result"][0]["value"][1]
+    if metric["status"] == "success":
+        if metric["data"]["result"] and 'value' in metric["data"]["result"][0]:
+            log("Current metric is {}".format(metric["data"]["result"][0]["value"][1]))
+            return metric["data"]["result"][0]["value"][1]
+    else:
+        msg = "Got query error {}. The query was {}".format(metric["error"], query)
+        log (msg, chat=True)
+        raise(RuntimeWarning(msg))
+    #got no data
+    log("Query returned no data")
     return 0
 
 def update_destination_rule(crds, namespace, service):
@@ -130,7 +137,7 @@ def update_virtualservice(crds, obj):
     else:
         log("Canary is sick! Performing {} on canary for {} {}.".format(if_unhealthy, name, obj["spec"]["canary_version"]), chat=True)
         exec(if_unhealthy+'(crds, vs, namespace, name)')
-        log("Performed {} on canaryfor {} {}.".format(if_unhealthy, name, obj["spec"]["canary_version"]), chat=True)
+        log("Performed {} on canary for {} {}.".format(if_unhealthy, name, obj["spec"]["canary_version"]), chat=True)
     log("Watching the birds...")
   
 def freeze(crds, vs, namespace, name):
@@ -169,12 +176,17 @@ def release_canary(destination_rule, virtualservice, crds, obj):
     #in virtualservice - set weights: prod=100 and canary=0
     rollback(crds, virtualservice, obj["metadata"]["namespace"], obj["metadata"]["name"])
     #now delete the CR
-    crds.delete_namespaced_custom_object(DOMAIN, 
+    try: 
+        crds.delete_namespaced_custom_object(DOMAIN, 
                                          "v1alpha1", 
                                          obj["metadata"]["namespace"], 
                                          "birdwatches", 
                                          obj["metadata"]["name"],
                                          {})
+    except kubernetes.client.rest.ApiException as error:
+        log("Error deleting the birdwatch: {} ".format(repr(error)))
+
+
          
 if __name__ == "__main__":
     if 'KUBERNETES_PORT' in os.environ:
@@ -218,4 +230,7 @@ if __name__ == "__main__":
             done = spec.get("review", False)
             if done:
                 continue
-            update_virtualservice(crds, obj)
+            try:    
+                update_virtualservice(crds, obj)
+            except RuntimeWarning as error:
+                print('Caught this error: ' + repr(error)) 
