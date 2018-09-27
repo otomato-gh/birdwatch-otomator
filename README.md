@@ -6,6 +6,6 @@ Supports querying Prometheus for canary health metrics.
 
 Can be configured to send Slack notifications.
 
-Detailed documentations coming soon.
+Install with helm by running: `helm install ./helm --name birdwatch --set slackToken=<your-slack-token> --set prometheusUrl=<your-slack-token>`
 
 
