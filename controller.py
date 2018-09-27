@@ -6,7 +6,7 @@ import requests
 import monkeypatches.monkeypatch
 
 DOMAIN = "otomato.link"
-PROM_URL = os.getenv("PROMETHEUS_URL", "http://prometheus.159.8.233.5.nip.io")  # http://prometheus.default.svc.cluster.local"
+PROM_URL = os.getenv("PROMETHEUS_URL", "http://prometheus.istio-system.svc.cluster.local:9090")  # http://prometheus.default.svc.cluster.local"
 
 if os.getenv('SLACK_API_TOKEN'):
     import notifications.slack as slack
