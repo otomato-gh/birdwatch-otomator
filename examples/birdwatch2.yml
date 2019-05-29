@@ -1,0 +1,12 @@
+---
+apiVersion: otomato.link/v1alpha1
+kind: BirdWatch
+metadata:
+  name: beth
+spec:
+  canary_version: v04
+  if_unhealthy: freeze
+  increment: 2
+  metric: 'irate(istio_request_duration_seconds_sum{destination_service_name="beth",destination_version="v04"}[30s])'
+  service: beth
+  deviation: 30

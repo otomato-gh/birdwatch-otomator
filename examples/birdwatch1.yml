@@ -1,0 +1,13 @@
+---
+apiVersion: otomato.link/v1alpha1
+kind: BirdWatch
+metadata:
+  name: aleph
+spec:
+  canary_version: v04
+  if_unhealthy: rollback
+  increment: 1
+  interval: 5
+  metric: sum(irate(istio_requests_total{destination_service_name="aleph",destination_version="v04",response_code="500"}[30s]))
+  service: aleph
+  deviation: 0.5
