@@ -12,7 +12,7 @@ spec:
     kind: BirdWatch
     shortNames:
      - bw
-validation:
+  validation:
    # openAPIV3Schema is the schema for validating custom objects.
     openAPIV3Schema:
       properties:
@@ -23,7 +23,8 @@ validation:
             metric:
               type: string
             deviation:
-              type: integer
+              type: number
+              format: float
             increment:
               type: integer
               minimum: 1
@@ -32,7 +33,7 @@ validation:
               type: string
             if_unhealthy:
               type: string
-              pattern: '^(freeze|rollback}$'
+              pattern: '^(freeze|rollback)$'
             interval:
               type: integer
               minimum: 1
