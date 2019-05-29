@@ -24,8 +24,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
+          {{- if .Values.prometheusUrl }}
           - name: PROMETHEUS_URL
             value: {{ .Values.prometheusUrl }}
+          {{- end }}
           - name: SLACK_API_TOKEN
             value: {{ .Values.slackToken }}
       serviceAccount: {{ .Chart.Name }}
