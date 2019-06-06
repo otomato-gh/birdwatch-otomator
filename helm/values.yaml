@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: otomato/birdwatch
-  tag: 0.3
+  tag: 0.4
   pullPolicy: IfNotPresent
 
 nameOverride: ""

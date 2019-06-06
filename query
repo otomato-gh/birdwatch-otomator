@@ -1,0 +1,1 @@
+istio_requests_total{reporter=\"source\",destination_service=~\"$service\",response_code!~\"5.*\"}[30s])) / sum(irate(istio_requests_total{reporter=\"source\",destination_service=~\"$service\"}[30s]))",
