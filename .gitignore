@@ -3,3 +3,4 @@ kubernetes
 /**/__pycache__/
 slacktoken
 *.cmd
+.DS_Store

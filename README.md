@@ -18,9 +18,17 @@ The first received healthcheck `metric` is considered the baseline.
 
 Otomator then starts releasing traffic on to canary pods according to the defined `increment` and `interval`. After each increment the healthcheck metric is queried again. 
 
-If at any point the returned metric deviates from the baseline more than allowed by the `deviation` BirdWatch property, all the traffic goes back to the previous production version.
+If at any point the returned metric deviates from the baseline more than allowed by the `deviation` BirdWatch property, the otomator performs the action that is defined by the `if_unhealthy` property of the BirdWatch. I.e:
+
+- If it is set to `rollback` - all traffic goes back to the current production version.
+- If it is set to `freeze` - the canary is left with however much traffic it was receiving. The engineer who sees the Slack notification can then go in and analyze the situation.   
 
 If no deviation occurs - the traffic is gradually released to the canary until finally it is promoted to become the production version.
+
+## A Diagram
+
+This diagram represents how the BridWatch *otomator* works:
+![image](images/birdwatch.svg)
 
 ## The BirdWatch resource
 
@@ -94,6 +102,8 @@ Some ideas:
 - Support additional notification systems (currently only Slack)
 
 - Check that Prometheus is available on startup
+
+- Allow to define the upper limit for canary traffic
 
 
 
