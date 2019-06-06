@@ -10,8 +10,8 @@ PROM_URL = os.getenv("PROMETHEUS_URL", "http://prometheus.istio-system.svc.clust
 
 if os.getenv('SLACK_API_TOKEN'):
     import notifications.slack as slack
-    print ("Slack bot activated")
     chat_notify = slack.notify
+    chat_notify("Birdwatch : Slack bot activated")
 else:
     def chat_notify(message):
         return True
