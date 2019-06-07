@@ -26,8 +26,8 @@ def check_canary_health(metric, healthy, deviation):
     log("Checking canary health ")
     current = retrieve_metric(metric["query"])
     if 'previous' not in metric:
-        metric["previous"] = int(float(current))
-    if int(float(current)) - int(float(healthy)) > deviation or int(float(current)) - metric["previous"] > deviation:
+        metric["previous"] = float(current)
+    if float(current) - float(healthy) > deviation or float(current) - metric["previous"] > deviation:
         return False
     time.sleep(1)
     metric["previous"] = int(float(current))
