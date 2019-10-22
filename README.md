@@ -1,4 +1,4 @@
-# BirdWatch Otomator
+# BirdWatch Otomator <img src="images/logo.png" alt="logo" width="80"/>
 
 A python-based K8S controller to manage canary releases with Istio service mesh
 
