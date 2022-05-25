@@ -12,7 +12,7 @@ oauthlib==2.1.0
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
 pycparser==2.19
-PyJWT==1.6.4
+PyJWT==2.4.0
 python-dateutil==2.7.3
 PyYAML==3.13
 requests==2.19.1
